@@ -1,0 +1,33 @@
+stages:
+  - build
+  - unittest
+  - systembuild
+  - systemtest
+
+build:
+  stage: build
+  script: cd $CI_PROJECT_DIR/app && docker build -t app .
+
+unittest_application_code:
+  stage: unittest
+  script: cd $CI_PROJECT_DIR/app/tests && /bin/bash run_tests.sh
+
+build_app:
+  stage: systembuild
+  script:
+    - cd $CI_PROJECT_DIR/app
+    - docker login http://dev.gitlab.local:5005 -u root -p 1234QWer
+    - docker build -t dev.gitlab.local:5005/root/application/app .
+    - docker push dev.gitlab.local:5005/root/application/app
+
+build_lb:
+  stage: systembuild
+  script:
+    - cd $CI_PROJECT_DIR/lb
+    - docker login http://dev.gitlab.local:5005 -u root -p 1234QWer
+    - docker build -t dev.gitlab.local:5005/root/application/lb .
+    - docker push dev.gitlab.local:5005/root/application/lb
+
+system_test:
+  stage: systemtest
+  script: /bin/bash tests/run_system_tests.sh
